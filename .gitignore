@@ -1,0 +1,24 @@
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.log
+
+# Front-end
+dorm-frontend/node_modules/
+dorm-frontend/dist/
+dorm-frontend/.DS_Store
+dorm-frontend/.env.local
+
+# Uploads
+uploads/
+
+# Deploy temp
+deploy_temp_pkg/
+deploy_package.tar.gz
+
+# IDE
+.idea/
+.vscode/
+*.iml

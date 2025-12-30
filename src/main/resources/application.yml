@@ -1,0 +1,52 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: dorm-system
+  profiles:
+    active: dev
+  
+  # 数据库配置
+  datasource:
+    # 阿里云 RDS 连接信息
+    url: jdbc:mysql://rm-bp193q5p663xsab94yo.mysql.rds.aliyuncs.com:3306/dorm_system?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&createDatabaseIfNotExist=true&rewriteBatchedStatements=true
+    username: ROOT_2005
+    password: Pjh20050309
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      max-lifetime: 1800000
+      connection-timeout: 30000
+  
+  # 初始化 SQL 脚本
+  sql:
+    init:
+      mode: always # always: 每次启动都尝试执行; never: 不自动执行 (防止重启清空线上数据库)
+      encoding: UTF-8
+      schema-locations: classpath:db/schema.sql
+      data-locations: classpath:db/data.sql
+      continue-on-error: true # 避免重复插入数据报错（可选，建议配合 INSERT IGNORE 使用，或者开发环境允许报错）
+
+  servlet:
+    encoding:
+      charset: UTF-8
+      force: true
+      enabled: true
+
+# Zhipu AI Configuration
+zhipu:
+  api-key: 968c72fa207e40e0a7f10ca9931b8f62.BabGOS1G3uKHnoIE
+
+# MyBatis Plus 配置
+mybatis-plus:
+  mapper-locations: classpath*:/mapper/**/*.xml
+  type-aliases-package: com.university.dorm.module.*.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 开发环境开启 SQL 日志
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-field: deleted # 如果有逻辑删除

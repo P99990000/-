@@ -1,0 +1,48 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: dorm-system
+  
+  # 生产环境数据库配置 (使用与开发环境相同的 RDS，或者修改为本地/其他数据库)
+  datasource:
+    url: jdbc:mysql://rm-bp193q5p663xsab94yo.mysql.rds.aliyuncs.com:3306/dorm_system?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&createDatabaseIfNotExist=true&rewriteBatchedStatements=true
+    username: ROOT_2005
+    password: Pjh20050309
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      minimum-idle: 10
+      maximum-pool-size: 50 # 生产环境增加连接池大小
+      max-lifetime: 1800000
+      connection-timeout: 30000
+  
+  # 生产环境不自动执行 SQL 初始化脚本，防止数据覆盖
+  sql:
+    init:
+      mode: never
+
+  servlet:
+    encoding:
+      charset: UTF-8
+      force: true
+      enabled: true
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+# Zhipu AI Configuration
+zhipu:
+  api-key: 968c72fa207e40e0a7f10ca9931b8f62.BabGOS1G3uKHnoIE
+
+# MyBatis Plus 配置
+mybatis-plus:
+  mapper-locations: classpath*:/mapper/**/*.xml
+  type-aliases-package: com.university.dorm.module.*.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 生产环境可以考虑关闭日志或使用 Slf4jImpl
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-field: deleted
