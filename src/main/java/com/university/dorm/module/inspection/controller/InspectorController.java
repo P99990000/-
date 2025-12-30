@@ -20,13 +20,11 @@ public class InspectorController {
     public Result<Boolean> submitRecord(@RequestBody InspectorSubmitRequest request) {
         // Map request to service DTO
         InspectionSubmitDTO serviceDto = new InspectionSubmitDTO();
-        serviceDto.setDormId(request.getDormId());
+        serviceDto.setDormId(request.getDormitoryId());
         // Use inspector name from request, default to "系统录入" if empty
         serviceDto.setInspectorName(request.getInspectorName() != null && !request.getInspectorName().isEmpty() ? request.getInspectorName() : "系统录入");
         serviceDto.setTotalScore(request.getTotalScore());
         serviceDto.setIsNotice(request.getIsNotice());
-        serviceDto.setIsNeedRectification(request.getIsNeedRectification());
-        serviceDto.setImageUrl(request.getImageUrl());
         serviceDto.setRemark("日常检查");  
         
         if (request.getDetails() != null) {

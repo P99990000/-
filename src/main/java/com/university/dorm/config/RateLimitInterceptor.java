@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+@Component
 public class RateLimitInterceptor implements HandlerInterceptor {
 
     // Key: IP_Minute, Value: Count

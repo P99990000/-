@@ -40,7 +40,7 @@ public class InspectionRecord implements Serializable {
     /**
      * 检查日期
      */
-    private LocalDateTime checkDate;
+    private LocalDate checkDate;
 
     /**
      * 整改意见/备注

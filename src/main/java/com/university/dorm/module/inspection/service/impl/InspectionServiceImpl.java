@@ -25,7 +25,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 @Service
@@ -103,77 +102,69 @@ public class InspectionServiceImpl extends ServiceImpl<InspectionRecordMapper, I
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean submitRecord(InspectionSubmitDTO dto) {
-        try {
-            System.out.println("Service processing submitRecord: " + dto);
-            
-            // 1. 获取总分 (直接使用前端传递的总分)
-            BigDecimal totalScore = dto.getTotalScore();
-            if (totalScore == null) {
-                // 如果前端未传总分，作为兜底，尝试累加明细分数（虽然新逻辑可能不再包含明细分数）
-                totalScore = BigDecimal.ZERO;
-                if (dto.getDetails() != null) {
-                    for (InspectionSubmitDTO.DetailDTO detail : dto.getDetails()) {
-                        if (detail.getScore() != null) {
-                            totalScore = totalScore.add(detail.getScore());
-                        }
+        // 1. 获取总分 (直接使用前端传递的总分)
+        BigDecimal totalScore = dto.getTotalScore();
+        if (totalScore == null) {
+            // 如果前端未传总分，作为兜底，尝试累加明细分数（虽然新逻辑可能不再包含明细分数）
+            totalScore = BigDecimal.ZERO;
+            if (dto.getDetails() != null) {
+                for (InspectionSubmitDTO.DetailDTO detail : dto.getDetails()) {
+                    if (detail.getScore() != null) {
+                        totalScore = totalScore.add(detail.getScore());
                     }
                 }
             }
-
-            // 2. 保存主记录
-            InspectionRecord record = new InspectionRecord();
-            record.setDormId(dto.getDormId());
-            record.setInspectorName(dto.getInspectorName());
-            record.setIsNotice(Boolean.TRUE.equals(dto.getIsNotice()) ? 1 : 0);
-            record.setRemark(dto.getRemark());
-            record.setImageUrl(dto.getImageUrl());
-            record.setCheckDate(LocalDateTime.now());
-            record.setTotalScore(totalScore);
-            
-            // 初始化整改状态
-            if (Boolean.TRUE.equals(dto.getIsNeedRectification())) {
-                record.setRectificationStatus(4); // 4: 需整改
-            } else {
-                record.setRectificationStatus(0); // 0: 无
-            }
-            
-            boolean saved = this.save(record);
-            if (!saved) {
-                return false;
-            }
-
-            // 3. 保存明细
-            if (dto.getDetails() != null && !dto.getDetails().isEmpty()) {
-                List<InspectionDetail> details = new ArrayList<>();
-                for (InspectionSubmitDTO.DetailDTO detailDto : dto.getDetails()) {
-                    // 只有当有扣分原因时才保存明细
-                    String reason = detailDto.getDeductionReason();
-                    if (reason != null && !reason.trim().isEmpty()) {
-                        InspectionDetail detail = new InspectionDetail();
-                        detail.setRecordId(record.getId());
-                        detail.setItemId(detailDto.getItemId());
-                        // 明细分数可以为空，或者存0
-                        detail.setScore(detailDto.getScore() != null ? detailDto.getScore() : BigDecimal.ZERO);
-                        detail.setDeductionReason(reason);
-                        detail.setImageUrl(detailDto.getImageUrl());
-                        details.add(detail);
-                    }
-                }
-                
-                // 批量插入明细
-                if (!details.isEmpty()) {
-                    for (InspectionDetail detail : details) {
-                        inspectionDetailMapper.insert(detail);
-                    }
-                }
-            }
-
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.err.println("Submit Record Error: " + e.getMessage());
-            throw e; // Re-throw to trigger rollback
         }
+
+        // 2. 保存主记录
+        InspectionRecord record = new InspectionRecord();
+        record.setDormId(dto.getDormId());
+        record.setInspectorName(dto.getInspectorName());
+        record.setIsNotice(Boolean.TRUE.equals(dto.getIsNotice()) ? 1 : 0);
+        record.setRemark(dto.getRemark());
+        record.setImageUrl(dto.getImageUrl());
+        record.setCheckDate(LocalDate.now());
+        record.setTotalScore(totalScore);
+        
+        // 初始化整改状态
+        if (Boolean.TRUE.equals(dto.getIsNeedRectification())) {
+            record.setRectificationStatus(4); // 4: 需整改
+        } else {
+            record.setRectificationStatus(0); // 0: 无
+        }
+        
+        boolean saved = this.save(record);
+        if (!saved) {
+            return false;
+        }
+
+        // 3. 保存明细
+        if (dto.getDetails() != null && !dto.getDetails().isEmpty()) {
+            List<InspectionDetail> details = new ArrayList<>();
+            for (InspectionSubmitDTO.DetailDTO detailDto : dto.getDetails()) {
+                // 只有当有扣分原因时才保存明细
+                String reason = detailDto.getDeductionReason();
+                if (reason != null && !reason.trim().isEmpty()) {
+                    InspectionDetail detail = new InspectionDetail();
+                    detail.setRecordId(record.getId());
+                    detail.setItemId(detailDto.getItemId());
+                    // 明细分数可以为空，或者存0
+                    detail.setScore(detailDto.getScore() != null ? detailDto.getScore() : BigDecimal.ZERO);
+                    detail.setDeductionReason(reason);
+                    detail.setImageUrl(detailDto.getImageUrl());
+                    details.add(detail);
+                }
+            }
+            
+            // 批量插入明细
+            if (!details.isEmpty()) {
+                for (InspectionDetail detail : details) {
+                    inspectionDetailMapper.insert(detail);
+                }
+            }
+        }
+
+        return true;
     }
 
     @Override

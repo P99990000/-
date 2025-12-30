@@ -44,19 +44,19 @@ const router = createRouter({
           path: 'inspector/submit',
           name: 'inspector-submit',
           component: InspectorSubmitView,
-          meta: { title: '检查录入', roles: ['inspector', 'admin'] }
+          meta: { title: '检查录入', roles: ['inspector'] }
         },
         {
           path: 'inspector/records',
           name: 'inspector-records',
           component: InspectorRecordView,
-          meta: { title: '检查记录', roles: ['inspector', 'admin'] }
+          meta: { title: '检查记录', roles: ['inspector'] }
         },
         {
           path: 'inspector/rectification-review',
           name: 'inspector-rectification-review',
           component: InspectorRectificationView,
-          meta: { title: '不合格宿舍整改反馈', roles: ['inspector', 'admin'] }
+          meta: { title: '不合格宿舍整改反馈', roles: ['inspector'] }
         },
         {
           path: 'admin/dashboard',

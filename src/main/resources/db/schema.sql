@@ -38,7 +38,6 @@ CREATE TABLE IF NOT EXISTS `student` (
     `student_sn` VARCHAR(32) NOT NULL COMMENT '学号（业务主键）',
     `name` VARCHAR(50) NOT NULL COMMENT '姓名',
     `class_name` VARCHAR(50) NOT NULL COMMENT '班级（如：计科2101）',
-    `password` VARCHAR(100) DEFAULT NULL COMMENT '密码',
     `gender` TINYINT DEFAULT 1 COMMENT '性别：1-男，2-女',
     `dorm_id` BIGINT UNSIGNED DEFAULT NULL COMMENT '所属宿舍ID',
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -73,7 +72,7 @@ CREATE TABLE IF NOT EXISTS `inspection_record` (
     `dorm_id` BIGINT UNSIGNED NOT NULL COMMENT '受检宿舍ID',
     `inspector_name` VARCHAR(50) NOT NULL COMMENT '检查人员姓名（或关联管理员ID）',
     `total_score` DECIMAL(5, 2) NOT NULL DEFAULT 0.00 COMMENT '总得分',
-    `check_date` DATETIME NOT NULL COMMENT '检查日期',
+    `check_date` DATE NOT NULL COMMENT '检查日期',
     `remark` VARCHAR(500) DEFAULT NULL COMMENT '整改意见/备注',
     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
@@ -90,12 +89,6 @@ ALTER TABLE `inspection_record` ADD COLUMN `image_url` VARCHAR(500) DEFAULT NULL
 ALTER TABLE `inspection_record` ADD COLUMN `rectification_status` TINYINT DEFAULT 0 COMMENT '整改状态:0无,1待审,2通过,3驳回';
 ALTER TABLE `inspection_record` ADD COLUMN `rectification_desc` VARCHAR(500) DEFAULT NULL COMMENT '整改说明';
 ALTER TABLE `inspection_record` ADD COLUMN `rectification_image_url` VARCHAR(500) DEFAULT NULL COMMENT '整改照片';
-
--- 修正 check_date 类型为 DATETIME (如果之前是 DATE)
-ALTER TABLE `inspection_record` MODIFY COLUMN `check_date` DATETIME COMMENT '检查日期';
-
--- 尝试添加 password 字段到 student 表 (如果不存在)
-ALTER TABLE `student` ADD COLUMN `password` VARCHAR(100) DEFAULT NULL COMMENT '密码';
 
 -- =============================================
 -- 5. 检查明细表 (inspection_detail)

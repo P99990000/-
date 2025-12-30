@@ -6,12 +6,10 @@ import java.util.List;
 
 @Data
 public class InspectorSubmitRequest {
-    private Long dormId;
+    private Long dormitoryId;
     private String inspectorName;
     private BigDecimal totalScore;
     private Boolean isNotice;
-    private Boolean isNeedRectification;
-    private String imageUrl;
     private List<Detail> details;
 
     @Data

@@ -7,12 +7,7 @@
       <div class="search-box">
         <el-form :inline="true" class="demo-form-inline">
           <el-form-item label="楼栋">
-            <el-select 
-              v-model="selectedBuilding" 
-              placeholder="选择楼栋" 
-              style="width: 180px"
-              clearable
-            >
+            <el-select v-model="selectedBuilding" placeholder="选择楼栋" style="width: 180px">
               <el-option
                 v-for="building in uniqueBuildings"
                 :key="building"
@@ -27,7 +22,6 @@
               placeholder="例如: 301" 
               style="width: 150px"
               @keyup.enter="handleSearch"
-              clearable
             />
           </el-form-item>
           <el-form-item>
@@ -267,10 +261,6 @@ const handleSearch = () => {
     ElMessage.error('未找到该宿舍，请检查楼栋和宿舍号是否正确')
   }
 }
-
-// const fetchCurrentStudent = async () => {
-//   // Logic removed as per user request to not auto-fill dorm info
-// }
 
 // Rectification Logic
 const openRectificationModal = (row: InspectionRecord) => {

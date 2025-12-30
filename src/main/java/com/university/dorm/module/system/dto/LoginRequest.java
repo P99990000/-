@@ -14,7 +14,5 @@ public class LoginRequest {
     @NotBlank(message = "验证码不能为空")
     private String captcha;
     
-    private String role; // student, admin (default)
-    
     private String uuid; // If using stateless captcha (optional)
 }

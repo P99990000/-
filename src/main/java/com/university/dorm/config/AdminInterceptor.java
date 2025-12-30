@@ -1,12 +1,16 @@
 package com.university.dorm.config;
 
 import cn.hutool.jwt.JWTUtil;
+import com.university.dorm.module.system.mapper.SysUserMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.nio.charset.StandardCharsets;
 
+@Component
 public class AdminInterceptor implements HandlerInterceptor {
 
     private static final byte[] JWT_KEY = "dorm-system-secret-key-2025".getBytes(StandardCharsets.UTF_8);

@@ -48,22 +48,16 @@ public interface ReportMapper {
             "r.total_score as totalScore, " +
             "r.inspector_name as inspectorName, " +
             "r.check_date as checkDate, " +
-            "CONCAT_WS('; ', r.remark, (SELECT GROUP_CONCAT(deduction_reason SEPARATOR ', ') FROM inspection_detail id WHERE id.record_id = r.id AND id.deduction_reason IS NOT NULL)) as issues " +
+            "COALESCE((SELECT GROUP_CONCAT(deduction_reason SEPARATOR ', ') FROM inspection_detail id WHERE id.record_id = r.id AND id.deduction_reason IS NOT NULL), '') as issues " +
             "FROM inspection_record r " +
             "LEFT JOIN dormitory d ON r.dorm_id = d.id " +
             "WHERE r.check_date &gt;= #{startDate} " +
             "<if test='search != null and search != \"\"'>" +
             "AND (d.building_name LIKE CONCAT('%', #{search}, '%') OR d.room_number LIKE CONCAT('%', #{search}, '%') OR r.inspector_name LIKE CONCAT('%', #{search}, '%')) " +
             "</if> " +
-            "<if test='filterType == \"fail\"'>" +
-            "AND r.total_score &lt; 60 " +
-            "</if> " +
-            "<if test='filterType == \"notice\"'>" +
-            "AND (r.is_notice = 1 OR r.rectification_status = 4) " +
-            "</if> " +
             "ORDER BY r.check_date DESC" +
             "</script>")
-    List<ReportDetailDTO> getDetails(@Param("startDate") LocalDate startDate, @Param("search") String search, @Param("filterType") String filterType);
+    List<ReportDetailDTO> getDetails(@Param("startDate") LocalDate startDate, @Param("search") String search);
     
     @Select("<script>" +
             "SELECT AVG(total_score) " +

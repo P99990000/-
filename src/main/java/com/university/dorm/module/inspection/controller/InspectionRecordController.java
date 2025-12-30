@@ -28,34 +28,26 @@ public class InspectionRecordController {
 
     @PostMapping("/submit")
     public Result<Boolean> submitRecord(@RequestBody @Valid InspectionSubmitDTO dto) {
-        try {
-            System.out.println("Received Submit Request: " + dto);
-            
-            // XSS Filtering
-            if (dto.getRemark() != null) {
-                dto.setRemark(HtmlUtil.escape(dto.getRemark()));
-            }
-            if (dto.getInspectorName() != null) {
-                dto.setInspectorName(HtmlUtil.escape(dto.getInspectorName()));
-            }
-            if (dto.getDetails() != null) {
-                for (InspectionSubmitDTO.DetailDTO detail : dto.getDetails()) {
-                    if (detail.getDeductionReason() != null) {
-                        detail.setDeductionReason(HtmlUtil.escape(detail.getDeductionReason()));
-                    }
+        // XSS Filtering
+        if (dto.getRemark() != null) {
+            dto.setRemark(HtmlUtil.escape(dto.getRemark()));
+        }
+        if (dto.getInspectorName() != null) {
+            dto.setInspectorName(HtmlUtil.escape(dto.getInspectorName()));
+        }
+        if (dto.getDetails() != null) {
+            for (InspectionSubmitDTO.DetailDTO detail : dto.getDetails()) {
+                if (detail.getDeductionReason() != null) {
+                    detail.setDeductionReason(HtmlUtil.escape(detail.getDeductionReason()));
                 }
             }
-            
-            boolean success = inspectionService.submitRecord(dto);
-            if (success) {
-                return Result.success(true);
-            } else {
-                return Result.error("提交失败");
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.err.println("Controller Submit Error: " + e.getMessage());
-            return Result.error("提交异常: " + e.getMessage());
+        }
+        
+        boolean success = inspectionService.submitRecord(dto);
+        if (success) {
+            return Result.success(true);
+        } else {
+            return Result.error("提交失败");
         }
     }
 

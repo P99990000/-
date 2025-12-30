@@ -82,14 +82,10 @@ public class ReportServiceImpl implements ReportService {
         return reportMapper.getRank(startDate, "ASC");
     }
 
-    public List<ReportDetailDTO> getDetails(String timeRange, String search) {
-        return getDetails(timeRange, search, null);
-    }
-
     @Override
-    public List<ReportDetailDTO> getDetails(String timeRange, String search, String filterType) {
+    public List<ReportDetailDTO> getDetails(String timeRange, String search) {
         LocalDate startDate = getStartDate(timeRange);
-        return reportMapper.getDetails(startDate, search, filterType);
+        return reportMapper.getDetails(startDate, search);
     }
 
     private LocalDate getStartDate(String timeRange) {

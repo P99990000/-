@@ -7,14 +7,8 @@
         </div>
       </template>
       <el-form :model="form" :rules="rules" ref="formRef" label-width="80px" class="login-form">
-        <el-form-item label="身份">
-          <el-radio-group v-model="form.role">
-            <el-radio label="admin">管理员/宿管</el-radio>
-            <el-radio label="student">学生</el-radio>
-          </el-radio-group>
-        </el-form-item>
-        <el-form-item label="账号" prop="username">
-          <el-input v-model="form.username" :placeholder="form.role === 'student' ? '请输入默认账号' : '请输入用户名'" />
+        <el-form-item label="用户名" prop="username">
+          <el-input v-model="form.username" placeholder="请输入用户名" />
         </el-form-item>
         <el-form-item label="密码" prop="password">
           <el-input v-model="form.password" type="password" placeholder="请输入密码" show-password @keyup.enter="handleLogin" />
@@ -36,7 +30,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, onMounted, watch } from 'vue'
+import { reactive, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user'
 import { ElMessage } from 'element-plus'
@@ -51,14 +45,7 @@ const loading = ref(false)
 const form = reactive({
   username: '',
   password: '',
-  captcha: '',
-  role: 'student' // Default role
-})
-
-// Clear inputs when role changes
-watch(() => form.role, () => {
-  form.username = ''
-  form.password = ''
+  captcha: ''
 })
 
 const rules = reactive<FormRules>({
@@ -91,8 +78,7 @@ const handleLogin = async () => {
         const res = await axios.post('/api/auth/login', {
           username: form.username,
           password: form.password,
-          captcha: form.captcha,
-          role: form.role
+          captcha: form.captcha
         })
         
         if (res.data.code === 200) {

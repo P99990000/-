@@ -182,13 +182,10 @@ const initScatterChart = () => {
   const buildings = Array.from(new Set(dormScores.value.map(d => d.building))).sort()
   
   // 2. 构造 Series Data
-  // Filter out dorms with no score to avoid plotting them as 0
-  const seriesData = dormScores.value
-    .filter(d => d.score !== null && d.score !== undefined)
-    .map(d => {
-      const buildingIndex = buildings.indexOf(d.building)
-      return [buildingIndex, d.score, d.building, d.room]
-    })
+  const seriesData = dormScores.value.map(d => {
+    const buildingIndex = buildings.indexOf(d.building)
+    return [buildingIndex, d.score || 0, d.building, d.room]
+  })
 
   const option = {
     tooltip: {
@@ -385,7 +382,6 @@ const initPieChart = () => {
 
 // 辅助函数：分数颜色
 const getScoreType = (score: number) => {
-  if (score === null || score === undefined) return 'info'
   if (score >= 90) return 'success'
   if (score < 60) return 'danger'
   return 'primary'

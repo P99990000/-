@@ -17,7 +17,7 @@
           </div>
         </template>
         <el-table :data="recentRecords" style="width: 100%" stripe v-loading="loading">
-          <el-table-column prop="checkDate" label="检查日期" width="120" :formatter="formatDate" />
+          <el-table-column prop="checkDate" label="检查日期" width="120" />
           <el-table-column label="宿舍" width="150">
             <template #default="{ row }">
               {{ row.buildingName }} {{ row.roomNumber }}
@@ -63,11 +63,6 @@ interface InspectionRecord {
 
 const recentRecords = ref<InspectionRecord[]>([])
 const loading = ref(false)
-
-const formatDate = (_row: any, _column: any, cellValue: string) => {
-  if (!cellValue) return ''
-  return new Date(cellValue).toLocaleString()
-}
 
 const fetchRecentRecords = async () => {
   loading.value = true

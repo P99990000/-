@@ -51,6 +51,8 @@ public class FileUploadController {
             }
 
             // Generate unique filename
+            String originalFilename = file.getOriginalFilename();
+            String suffix = originalFilename.substring(originalFilename.lastIndexOf("."));
             String fileName = UUID.randomUUID().toString() + suffix;
 
             // Save file

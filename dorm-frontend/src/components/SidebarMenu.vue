@@ -47,21 +47,6 @@
         <el-icon><Odometer /></el-icon>
         <template #title>仪表盘</template>
       </el-menu-item>
-      
-      <!-- Integrated Inspector Menus -->
-      <el-menu-item index="/inspector/submit">
-        <el-icon><EditPen /></el-icon>
-        <template #title>检查录入</template>
-      </el-menu-item>
-      <el-menu-item index="/inspector/records">
-        <el-icon><List /></el-icon>
-        <template #title>最近检查记录</template>
-      </el-menu-item>
-      <el-menu-item index="/inspector/rectification-review">
-        <el-icon><CircleCheck /></el-icon>
-        <template #title>整改反馈</template>
-      </el-menu-item>
-      
       <el-menu-item index="/hygiene-report">
         <el-icon><DataAnalysis /></el-icon>
         <template #title>卫生通报</template>

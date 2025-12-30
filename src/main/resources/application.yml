@@ -23,7 +23,7 @@ spring:
   # 初始化 SQL 脚本
   sql:
     init:
-      mode: always # always: 每次启动都尝试执行; never: 不自动执行 (防止重启清空线上数据库)
+      mode: always # always: 每次启动都尝试执行
       encoding: UTF-8
       schema-locations: classpath:db/schema.sql
       data-locations: classpath:db/data.sql

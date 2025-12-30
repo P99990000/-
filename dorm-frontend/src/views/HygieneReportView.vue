@@ -11,28 +11,10 @@
           <el-radio-button label="month">本月</el-radio-button>
         </el-radio-group>
         <el-button type="success" @click="goToSubmit" :icon="Plus">新增检查</el-button>
-        <el-button type="primary" @click="openExportDialog" :icon="Download">导出报告</el-button>
+        <el-button type="warning" @click="generateMockData" :icon="MagicStick">生成数据</el-button>
+        <el-button type="primary" @click="exportReport" :icon="Download">导出报告</el-button>
       </div>
     </div>
-
-    <!-- Export Dialog -->
-    <el-dialog v-model="exportDialogVisible" title="导出选项" width="400px">
-      <el-form label-position="top">
-        <el-form-item label="筛选条件">
-          <el-radio-group v-model="exportFilterType">
-            <el-radio label="all">所有数据</el-radio>
-            <el-radio label="fail">不合格宿舍 (< 60分)</el-radio>
-            <el-radio label="notice">整改通报宿舍</el-radio>
-          </el-radio-group>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="exportDialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="confirmExport">导出</el-button>
-        </span>
-      </template>
-    </el-dialog>
 
     <!-- Summary Cards -->
     <el-row :gutter="20" class="summary-row">
@@ -163,8 +145,8 @@
 
 <script setup lang="ts">
 import { ref, reactive, watch, onMounted } from 'vue'
-import { DataAnalysis, Download, Search, Plus } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
+import { DataAnalysis, Download, Search, Plus, MagicStick } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import axios from 'axios'
 import { useRouter } from 'vue-router'
 
@@ -172,8 +154,6 @@ const router = useRouter()
 const timeRange = ref('week')
 const searchQuery = ref('')
 const loading = ref(false)
-const exportDialogVisible = ref(false)
-const exportFilterType = ref('all')
 
 // Data State
 const summary = reactive({
@@ -249,78 +229,38 @@ const goToSubmit = () => {
   router.push('/inspector/submit')
 }
 
-// const generateMockData = async () => {
-//   try {
-//     await ElMessageBox.confirm(
-//       '确定要生成过去30天的模拟数据吗？这可能会花费几秒钟。',
-//       '生成模拟数据',
-//       {
-//         confirmButtonText: '确定生成',
-//         cancelButtonText: '取消',
-//         type: 'warning',
-//       }
-//     )
-//     
-//     loading.value = true
-//     const res = await axios.post('/api/mock/generate')
-//     if (res.data.code === 200) {
-//       ElMessage.success('模拟数据生成成功')
-//       fetchData() // Refresh data
-//     } else {
-//       ElMessage.error(res.data.message || '生成失败')
-//     }
-//   } catch (error) {
-//     if (error !== 'cancel') {
-//       console.error(error)
-//       ElMessage.error('生成数据请求失败')
-//     }
-//   } finally {
-//     loading.value = false
-//   }
-// }
-
-const openExportDialog = () => {
-  exportDialogVisible.value = true
-  exportFilterType.value = 'all'
-}
-
-const confirmExport = async () => {
-  exportDialogVisible.value = false
-  await exportReport()
-}
-
-const exportReport = async () => {
+const generateMockData = async () => {
   try {
-    ElMessage.info('正在生成报告...')
-    const response = await axios.get('/api/report/export', {
-      params: {
-        timeRange: timeRange.value,
-        search: searchQuery.value,
-        filterType: exportFilterType.value
-      },
-      responseType: 'blob'
-    })
+    await ElMessageBox.confirm(
+      '确定要生成过去30天的模拟数据吗？这可能会花费几秒钟。',
+      '生成模拟数据',
+      {
+        confirmButtonText: '确定生成',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+    )
     
-    // Create download link
-    const url = window.URL.createObjectURL(new Blob([response.data]))
-    const link = document.createElement('a')
-    link.href = url
-    // Append filter type to filename
-    let suffix = ''
-    if (exportFilterType.value === 'fail') suffix = '_不合格'
-    if (exportFilterType.value === 'notice') suffix = '_整改通报'
-    
-    link.setAttribute('download', `卫生检查报告${suffix}_${new Date().toISOString().slice(0,10)}.xlsx`)
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    window.URL.revokeObjectURL(url)
-    
-    ElMessage.success('导出成功')
+    loading.value = true
+    const res = await axios.post('/api/mock/generate')
+    if (res.data.code === 200) {
+      ElMessage.success('模拟数据生成成功')
+      fetchData() // Refresh data
+    } else {
+      ElMessage.error(res.data.message || '生成失败')
+    }
   } catch (error) {
-    console.error('Export failed', error)
-    ElMessage.error('导出失败')
+    if (error !== 'cancel') {
+      console.error(error)
+      ElMessage.error('生成数据请求失败')
+    }
+  } finally {
+    loading.value = false
   }
+}
+
+const exportReport = () => {
+  ElMessage.success('报告正在生成中，请稍候...')
 }
 </script>
 

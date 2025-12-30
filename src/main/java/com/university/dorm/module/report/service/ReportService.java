@@ -10,8 +10,5 @@ public interface ReportService {
     ReportSummaryDTO getSummary(String timeRange);
     List<ReportRankDTO> getTopRank(String timeRange);
     List<ReportRankDTO> getBottomRank(String timeRange);
-    /**
-     * 获取通报详细列表
-     */
-    List<ReportDetailDTO> getDetails(String timeRange, String search, String filterType);
+    List<ReportDetailDTO> getDetails(String timeRange, String search);
 }

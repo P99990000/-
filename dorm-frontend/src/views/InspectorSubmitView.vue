@@ -106,65 +106,39 @@
             <h3 class="section-title">检查明细</h3>
             <div class="items-list">
               <div v-for="entry in itemsWithForm" :key="entry.item.id" class="item-row">
-                <div class="item-header-mobile">
-                    <span class="item-name">{{ entry.item.itemName }}</span>
-                    <span class="item-desc">（{{ entry.item.maxScore }}分项）</span>
+                <div class="item-label">
+                  <span class="item-name">{{ entry.item.itemName }}</span>
+                  <span class="item-desc">（{{ entry.item.maxScore }}分项）</span>
                 </div>
-                
-                <div class="item-content">
-                    <div class="quick-deduct-buttons">
-                        <button 
-                          class="deduct-btn" 
-                          :class="{ active: entry.form.deduction === 0 }"
-                          @click="handleDeduct(entry, 0)"
-                        >
-                          满分
-                        </button>
-                        <button 
-                          class="deduct-btn" 
-                          :class="{ active: entry.form.deduction === 2 }"
-                          @click="handleDeduct(entry, 2)"
-                        >
-                          -2
-                        </button>
-                        <button 
-                          class="deduct-btn" 
-                          :class="{ active: entry.form.deduction === 5 }"
-                          @click="handleDeduct(entry, 5)"
-                        >
-                          -5
-                        </button>
-                        <button 
-                          class="deduct-btn" 
-                          :class="{ active: entry.form.deduction === 10 }"
-                          @click="handleDeduct(entry, 10)"
-                        >
-                          -10
-                        </button>
-                    </div>
-
-                    <el-input 
-                        v-model="entry.form.remark" 
-                        placeholder="备注原因..." 
-                        type="textarea"
-                        :rows="1"
-                        resize="none"
-                        class="custom-textarea"
-                    />
+                <div class="item-input">
+                  <el-input 
+                    v-model="entry.form.remark" 
+                    placeholder="无问题则留空，有问题请在此填写具体原因..." 
+                    type="textarea"
+                    :rows="1"
+                    resize="none"
+                    class="custom-textarea"
+                  />
                 </div>
               </div>
             </div>
           </div>
 
           <div class="form-actions sticky-bottom">
-            <div class="score-display">
-              <span class="score-label">当前总分</span>
-              <span class="score-value" :class="{ 'low-score': totalScore < 60 }">{{ totalScore }}</span>
+            <div class="score-wrapper">
+              <span class="score-label">最终得分</span>
+              <el-input-number 
+                v-model="totalScore" 
+                :min="0" 
+                :max="100" 
+                size="large"
+                class="score-input"
+              />
             </div>
             
             <div class="action-buttons">
               <div class="notice-wrapper">
-                <span class="notice-label">⚠️ 通报</span>
+                <span class="notice-label">⚠️ 通报批评</span>
                 <el-switch 
                   v-model="isNotice" 
                   inline-prompt 
@@ -174,7 +148,7 @@
                 />
               </div>
               <div class="rectify-wrapper">
-                <span class="rectify-label">🔧 整改</span>
+                <span class="rectify-label">🔧 需要整改</span>
                 <el-switch 
                   v-model="isNeedRectification" 
                   inline-prompt 
@@ -184,8 +158,9 @@
                 />
               </div>
               <el-button type="primary" size="large" class="submit-btn" @click="submitRecord" :loading="submitting">
-                提交并下一间
+                提交记录
               </el-button>
+              <el-button size="large" class="reset-btn" @click="resetForm">重置</el-button>
             </div>
           </div>
         </div>
@@ -200,7 +175,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import { useUserStore } from '../stores/user'
@@ -226,21 +201,13 @@ interface InspectionItem {
 }
 
 interface ItemDetailForm {
-  deduction: number
+  score: number
   remark: string
 }
 
 interface ItemWithForm {
   item: InspectionItem
   form: ItemDetailForm
-}
-
-// 常量
-const STORAGE_KEYS = {
-  CAMPUS: 'inspector_campus',
-  BUILDING: 'inspector_building',
-  FLOOR: 'inspector_floor',
-  INSPECTOR: 'inspector_name'
 }
 
 // 状态
@@ -257,6 +224,7 @@ const selectedDormId = ref<number | undefined>(undefined)
 const inspectorName = ref('')
 const isNotice = ref(false)
 const isNeedRectification = ref(false)
+const totalScore = ref(100)
 const imageUrl = ref('')
 const submitting = ref(false)
 
@@ -286,60 +254,6 @@ const roomOptions = computed(() => {
     .sort((a, b) => a.roomNumber.localeCompare(b.roomNumber))
 })
 
-// 计算属性：总分
-const totalScore = computed(() => {
-  const totalDeduction = itemsWithForm.value.reduce((sum, entry) => sum + entry.form.deduction, 0)
-  return Math.max(0, 100 - totalDeduction)
-})
-
-// 持久化监听
-watch(selectedCampus, (val) => localStorage.setItem(STORAGE_KEYS.CAMPUS, val || ''))
-watch(selectedBuilding, (val) => localStorage.setItem(STORAGE_KEYS.BUILDING, val || ''))
-watch(selectedFloor, (val) => {
-  if (val) localStorage.setItem(STORAGE_KEYS.FLOOR, val.toString())
-  else localStorage.removeItem(STORAGE_KEYS.FLOOR)
-})
-watch(inspectorName, (val) => localStorage.setItem(STORAGE_KEYS.INSPECTOR, val || ''))
-
-// 恢复状态
-const restoreState = async () => {
-  const savedCampus = localStorage.getItem(STORAGE_KEYS.CAMPUS)
-  const savedBuilding = localStorage.getItem(STORAGE_KEYS.BUILDING)
-  const savedFloor = localStorage.getItem(STORAGE_KEYS.FLOOR)
-  const savedInspector = localStorage.getItem(STORAGE_KEYS.INSPECTOR)
-
-  if (savedInspector) inspectorName.value = savedInspector
-  
-  if (savedCampus && buildingsGrouped.value[savedCampus]) {
-    selectedCampus.value = savedCampus
-    
-    if (savedBuilding) {
-      selectedBuilding.value = savedBuilding
-      // 加载楼栋数据
-      await loadBuildingDorms(savedBuilding)
-      
-      if (savedFloor) {
-        const floorNum = parseInt(savedFloor)
-        if (floorOptions.value.includes(floorNum)) {
-          selectedFloor.value = floorNum
-        }
-      }
-    }
-  }
-}
-
-// 加载楼栋宿舍数据
-const loadBuildingDorms = async (building: string) => {
-  try {
-    const res = await axios.get(`/api/dormitories/by-building/${encodeURIComponent(building)}`)
-    if (res.data.code === 200) {
-      currentBuildingDorms.value = res.data.data
-    }
-  } catch (error) {
-    ElMessage.error('加载该楼栋宿舍失败')
-  }
-}
-
 // 初始化数据
 const fetchData = async () => {
   try {
@@ -356,10 +270,6 @@ const fetchData = async () => {
       inspectionItems.value = itemsRes.data.data
       initFormItems()
     }
-
-    // 恢复上次选择的状态
-    await restoreState()
-
   } catch (error) {
     ElMessage.error('加载基础数据失败')
     console.error(error)
@@ -371,7 +281,7 @@ const initFormItems = () => {
   itemsWithForm.value = inspectionItems.value.map(item => ({
     item: item,
     form: {
-      deduction: 0,
+      score: 0, // No longer used for calculation
       remark: ''
     }
   }))
@@ -380,9 +290,9 @@ const initFormItems = () => {
 // 重置表单
 const resetItemScores = () => {
   itemsWithForm.value.forEach(entry => {
-    entry.form.deduction = 0
     entry.form.remark = ''
   })
+  totalScore.value = 100
   imageUrl.value = ''
   isNotice.value = false
   isNeedRectification.value = false
@@ -403,7 +313,15 @@ const handleBuildingChange = async () => {
   selectedDormId.value = undefined
   
   if (!selectedBuilding.value) return
-  await loadBuildingDorms(selectedBuilding.value)
+  
+  try {
+    const res = await axios.get(`/api/dormitories/by-building/${encodeURIComponent(selectedBuilding.value)}`)
+    if (res.data.code === 200) {
+      currentBuildingDorms.value = res.data.data
+    }
+  } catch (error) {
+    ElMessage.error('加载该楼栋宿舍失败')
+  }
 }
 
 const handleFloorChange = () => {
@@ -413,12 +331,14 @@ const handleFloorChange = () => {
 
 const handleRoomChange = () => {
   if (selectedDormId.value) {
+    // 可以在这里重新加载检查项，或者重置分数
     resetItemScores()
   }
 }
 
-const handleDeduct = (entry: ItemWithForm, amount: number) => {
-  entry.form.deduction = amount
+const resetForm = () => {
+  resetItemScores()
+  ElMessage.info('表单已重置')
 }
 
 // 上传处理
@@ -444,36 +364,9 @@ const beforeUpload = (file: File) => {
   return isJPG && isLt2M
 }
 
-// 跳转到下一间
-const jumpToNextRoom = () => {
-  if (!currentBuildingDorms.value || currentBuildingDorms.value.length === 0 || !selectedDormId.value) {
-    return false
-  }
-
-  const currentIndex = currentBuildingDorms.value.findIndex(d => d.id === selectedDormId.value)
-  if (currentIndex === -1 || currentIndex === currentBuildingDorms.value.length - 1) {
-    return false
-  }
-
-  const nextDorm = currentBuildingDorms.value[currentIndex + 1]
-  if (nextDorm) {
-    // 自动选中下一间
-    selectedFloor.value = nextDorm.floor
-    selectedRoom.value = nextDorm.roomNumber
-    selectedDormId.value = nextDorm.id
-    
-    // 滚动到顶部
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-    
-    ElMessage.success(`已切换到下一间：${nextDorm.roomNumber}`)
-    return true
-  }
-  return false
-}
-
 const submitRecord = async () => {
   if (!selectedDormId.value) {
-    ElMessage.warning('请先选择宿舍')
+    ElMessage.warning('请选择宿舍')
     return
   }
 
@@ -488,7 +381,7 @@ const submitRecord = async () => {
     // 组装数据
     const details = itemsWithForm.value.map(entry => ({
       itemId: entry.item.id,
-      score: entry.form.deduction, // 传递扣分值
+      score: entry.form.score,
       remark: entry.form.remark
     }))
 
@@ -497,26 +390,22 @@ const submitRecord = async () => {
       inspectorName: inspectorName.value.trim(),
       isNotice: isNotice.value,
       isNeedRectification: isNeedRectification.value,
-      totalScore: totalScore.value, // This is already a number from computed property
+      totalScore: totalScore.value,
       imageUrl: imageUrl.value,
       remark: '日常检查',
       details: details.map(d => ({
         itemId: d.itemId,
-        score: d.score, // This is number
-        deductionReason: d.remark
+        score: d.score,
+        deductionReason: d.remark // Map remark to deductionReason
       }))
     }
 
     const res = await axios.post('/api/records/submit', payload)
     if (res.data.code === 200) {
       ElMessage.success('提交成功！')
-      
-      const hasNext = jumpToNextRoom()
-      if (!hasNext) {
-        ElMessage.info('本层检查结束')
-        selectedDormId.value = undefined
-        resetItemScores()
-      }
+      selectedDormId.value = undefined
+      isNotice.value = false
+      resetItemScores()
     } else {
       ElMessage.error('提交失败：' + res.data.message)
     }
@@ -537,19 +426,19 @@ onMounted(() => {
 .inspector-submit-view {
   min-height: 100vh;
   background-color: #f0f2f5;
-  padding: 10px;
+  padding: 20px;
   display: flex;
   justify-content: center;
 }
 
 .content-container {
   width: 100%;
-  max-width: 800px;
+  max-width: 1000px;
 }
 
 /* Header */
 .page-header {
-  margin-bottom: 16px;
+  margin-bottom: 24px;
   text-align: center;
 }
 
@@ -557,17 +446,17 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  margin-bottom: 4px;
+  gap: 12px;
+  margin-bottom: 8px;
 }
 
 .header-icon {
-  font-size: 24px;
+  font-size: 32px;
 }
 
 .page-header h2 {
   margin: 0;
-  font-size: 20px;
+  font-size: 28px;
   color: #1f2937;
   font-weight: 600;
 }
@@ -575,162 +464,22 @@ onMounted(() => {
 .header-subtitle {
   color: #6b7280;
   margin: 0;
-  font-size: 12px;
-}
-
-/* Items List */
-.inspection-items-container {
-  margin-bottom: 24px;
-}
-
-.section-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #374151;
-  margin-bottom: 12px;
-  padding-left: 8px;
-  border-left: 4px solid #409eff;
-}
-
-.items-list {
-  background-color: #f9fafb;
-  border-radius: 8px;
-  padding: 10px;
-  border: 1px solid #e5e7eb;
-}
-
-.item-row {
-  display: flex;
-  flex-direction: column;
-  padding: 12px 0;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.item-row:last-child {
-  border-bottom: none;
-}
-
-.item-header-mobile {
-  margin-bottom: 8px;
-}
-
-.item-name {
-  font-weight: 600;
-  color: #374151;
-  font-size: 16px;
-}
-
-.item-desc {
-  font-size: 12px;
-  color: #9ca3af;
-}
-
-.item-content {
-  width: 100%;
-}
-
-.quick-deduct-buttons {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 8px;
-  overflow-x: auto;
-  padding-bottom: 4px; 
-}
-
-.deduct-btn {
-  flex: 1;
-  border: 1px solid #d1d5db;
-  background: white;
-  border-radius: 6px;
-  padding: 10px 0;
   font-size: 14px;
-  color: #4b5563;
-  cursor: pointer;
-  transition: all 0.2s;
-  min-width: 60px;
-  font-weight: 500;
 }
 
-.deduct-btn:active {
-  transform: scale(0.96);
-  background: #f3f4f6;
+/* Main Card */
+.main-card {
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
 }
 
-.deduct-btn.active {
-  background: #3b82f6;
-  color: white;
-  border-color: #3b82f6;
-  font-weight: 600;
-  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
-}
-
-.sticky-bottom {
-  position: sticky;
-  bottom: 0;
-  background: white;
-  padding: 12px 16px;
-  box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.08);
-  margin: 0 -20px -20px -20px; 
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  z-index: 100;
-  border-top: 1px solid #f0f0f0;
-}
-
-.score-display {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 4px;
-}
-
-.score-label {
-  font-size: 16px;
-  font-weight: 600;
-  color: #374151;
-}
-
-.score-value {
-  font-size: 28px;
-  font-weight: 700;
-  color: #10b981;
-}
-
-.score-value.low-score {
-  color: #ef4444;
-}
-
-.action-buttons {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.submit-btn {
-  flex: 2;
-  font-weight: 600;
-  height: 48px;
-  font-size: 16px;
-}
-
-.notice-wrapper, .rectify-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  gap: 2px;
-  min-width: 50px;
-}
-
-.notice-label, .rectify-label {
-  font-size: 12px;
-  font-weight: 500;
+.filter-section {
+  padding: 0 10px;
 }
 
 .filter-item {
-  margin-bottom: 12px;
+  margin-bottom: 16px;
   width: 100%;
 }
 
@@ -739,7 +488,7 @@ onMounted(() => {
 }
 
 .custom-divider {
-  margin: 16px 0;
+  margin: 24px 0;
 }
 
 /* Upload Section */
@@ -747,9 +496,8 @@ onMounted(() => {
   text-align: center;
   margin-bottom: 24px;
   border: 1px dashed #dcdfe6;
-  padding: 16px;
+  padding: 20px;
   border-radius: 8px;
-  background: #fafafa;
 }
 
 .uploaded-image {
@@ -769,6 +517,139 @@ onMounted(() => {
   margin-top: 8px;
 }
 
+/* Items List */
+.inspection-items-container {
+  margin-bottom: 24px;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 16px;
+  padding-left: 8px;
+  border-left: 4px solid #409eff;
+}
+
+.items-list {
+  background-color: #f9fafb;
+  border-radius: 8px;
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+}
+
+.item-row {
+  display: flex;
+  align-items: flex-start;
+  padding: 12px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.item-row:last-child {
+  border-bottom: none;
+}
+
+.item-label {
+  width: 140px;
+  flex-shrink: 0;
+  padding-top: 8px;
+}
+
+.item-name {
+  font-weight: 500;
+  color: #374151;
+  display: block;
+}
+
+.item-desc {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.item-input {
+  flex-grow: 1;
+}
+
+/* Form Actions */
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background-color: #fff;
+  border-top: 1px solid #f3f4f6;
+  border-radius: 0 0 12px 12px;
+}
+
+.sticky-bottom {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.score-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.score-label {
+  font-size: 16px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.score-input {
+  width: 140px;
+}
+
+.action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.notice-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background-color: #fef2f2;
+  border-radius: 6px;
+  position: relative;
+  z-index: 1;
+}
+
+.rectify-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background-color: #fdf6ec;
+  border-radius: 6px;
+  position: relative;
+  z-index: 1;
+}
+
+.notice-label {
+  font-size: 14px;
+  color: #ef4444;
+  font-weight: 500;
+}
+
+.rectify-label {
+  font-size: 14px;
+  color: #e6a23c;
+  font-weight: 500;
+}
+
+.submit-btn {
+  min-width: 120px;
+  font-weight: 600;
+}
+
 /* Empty State */
 .empty-state {
   text-align: center;
@@ -783,7 +664,7 @@ onMounted(() => {
 
 /* Animations */
 .animate-fade-in {
-  animation: fadeIn 0.4s ease-out;
+  animation: fadeIn 0.5s ease-out;
 }
 
 @keyframes fadeIn {
@@ -791,35 +672,26 @@ onMounted(() => {
   to { opacity: 1; transform: translateY(0); }
 }
 
-@media (min-width: 768px) {
-    .inspector-submit-view {
-        padding: 20px;
-    }
-
-    .item-row {
-        flex-direction: row;
-        align-items: flex-start;
-    }
-
-    .item-header-mobile {
-        width: 150px;
-        flex-shrink: 0;
-        margin-bottom: 0;
-        padding-top: 10px;
-    }
-
-    .form-actions {
-        flex-direction: row;
-        justify-content: space-between;
-    }
-
-    .score-display {
-        gap: 16px;
-    }
-
-    .sticky-bottom {
-        flex-direction: row;
-        align-items: center;
-    }
+/* Responsive */
+@media (max-width: 768px) {
+  .item-row {
+    flex-direction: column;
+  }
+  
+  .item-label {
+    width: 100%;
+    margin-bottom: 8px;
+    padding-top: 0;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .score-wrapper {
+    width: 100%;
+    justify-content: space-between;
+  }
 }
 </style>
